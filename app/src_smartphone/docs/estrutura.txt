@@ -1,0 +1,487 @@
+Documentação do Sistema de Restaurante - Estrutura de Pastas
+1. /components/ - Componentes Reutilizáveis
+Papel:
+Esta pasta contém todos os componentes de interface do usuário (UI) que são reutilizáveis ao longo da aplicação. Eles encapsulam funcionalidades específicas e são utilizados nas telas principais, como botões, cards de itens do cardápio, indicadores de carregamento e listas dinâmicas. O objetivo é manter a interface modular, reutilizável e fácil de modificar.
+
+Exemplos práticos:
+1. categoria_button.py - Botão de Categoria
+
+import flet as ft
+
+class CategoriaButton(ft.ElevatedButton):
+    def __init__(self, categoria, on_click):
+        super().__init__(text=categoria, on_click=on_click)
+        self.categoria = categoria
+        
+Comentário:
+Este componente representa um botão para cada categoria de itens do cardápio. Ele recebe como parâmetro o nome da categoria e uma função de callback para lidar com o evento de clique. A ideia é tornar este botão reutilizável para qualquer categoria, o que facilita a manutenção.
+
+
+2. item_card.py - Card de Item
+python
+Copiar código
+import flet as ft
+
+class ItemCard(ft.UserControl):
+    def __init__(self, nome, descricao, preco):
+        super().__init__()
+        self.nome = nome
+        self.descricao = descricao
+        self.preco = preco
+
+    def build(self):
+        return ft.Row([
+            ft.Text(self.nome, weight=ft.FontWeight.BOLD),
+            ft.Text(self.descricao),
+            ft.Text(f"R${self.preco:.2f}"),
+        ])
+Comentário:
+Esse componente exibe as informações de cada item do cardápio em um formato organizado. Ele é composto por três elementos: nome do item, descrição e preço. O ItemCard pode ser reutilizado em várias telas onde os itens precisam ser listados, como nas telas de categorias ou ao visualizar o pedido.
+
+3. loading_indicator.py - Indicador de Carregamento
+python
+Copiar código
+import flet as ft
+
+class LoadingIndicator(ft.UserControl):
+    def build(self):
+        return ft.Column([ft.ProgressRing(indeterminate=True)])
+Comentário:
+Este componente exibe um indicador de carregamento (spinner) enquanto a aplicação está processando dados ou aguardando uma resposta de rede. Ele é útil para exibir quando o sistema está carregando a lista de itens ou processando um pedido, melhorando a experiência do usuário.
+
+4. list_view_scroll.py - Lista Rolável com Carregamento Infinito
+python
+Copiar código
+import flet as ft
+
+class InfiniteListView(ft.UserControl):
+    def __init__(self, load_more_callback):
+        super().__init__()
+        self.load_more_callback = load_more_callback
+
+    def build(self):
+        self.list_view = ft.ListView(on_scroll_to_bottom=self.load_more_callback)
+        return self.list_view
+Comentário:
+Este componente exibe uma lista rolável de itens e chama um callback sempre que o usuário chega ao final da lista, possibilitando o carregamento de mais itens (rolagem infinita). Isso é ideal para mostrar uma quantidade grande de itens do cardápio sem sobrecarregar a interface inicial.
+
+=======================================================================================================================================================================================================================================================================================
+2. /screens/ - Telas da Aplicação
+Papel:
+Esta pasta contém os arquivos responsáveis pelas telas da aplicação. 
+Cada tela é uma unidade que apresenta uma interface visual específica, com base nos 
+componentes reutilizáveis da pasta /components/. Aqui, você define a lógica de apresentação 
+das informações e interação com o usuário, como telas de categorias, cardápio, pedidos, entre
+ outros.
+
+Exemplos práticos:
+1. menu_screen.py - Tela Principal (Menu)
+python
+Copiar código
+import flet as ft
+from components.categoria_button import CategoriaButton
+
+class MenuScreen(ft.UserControl):
+    def build(self):
+        categoria_buttons = [
+            CategoriaButton(categoria, self.on_categoria_click)
+            for categoria in ["Salgados", "Doces"]
+        ]
+        return ft.Column(categoria_buttons)
+
+    def on_categoria_click(self, e):
+        categoria = e.control.categoria
+        print(f"Clicado na categoria: {categoria}")
+Comentário:
+A tela principal exibe os botões de categorias. Cada botão é instanciado utilizando o componente CategoriaButton, e ao ser clicado, o evento chama o método on_categoria_click para exibir ou carregar os itens relacionados à categoria escolhida. Isso facilita a navegação do usuário e organiza o cardápio por categorias.
+
+2. categoria_screen.py - Tela de Categoria
+python
+Copiar código
+import flet as ft
+from components.item_card import ItemCard
+from components.loading_indicator import LoadingIndicator
+
+class CategoriaScreen(ft.UserControl):
+    def __init__(self, categoria, items):
+        super().__init__()
+        self.categoria = categoria
+        self.items = items
+        self.pagina_atual = 0
+        self.carregando = False
+
+    def build(self):
+        self.list_view = ft.ListView(on_scroll_to_bottom=self.carregar_mais_itens)
+        self.carregar_itens(self.pagina_atual)
+        return self.list_view
+
+    def carregar_itens(self, pagina_atual):
+        items_para_exibir = self.items[pagina_atual * 5: (pagina_atual + 1) * 5]
+        for item in items_para_exibir:
+            self.list_view.controls.append(ItemCard(item["nome"], item["descricao"], item["preco"]))
+        self.update()
+
+    def carregar_mais_itens(self, event):
+        if self.carregando:
+            return
+        self.carregando = True
+        self.pagina_atual += 1
+        self.carregar_itens(self.pagina_atual)
+        self.carregando = False
+Comentário:
+Essa tela exibe os itens de uma categoria específica e utiliza rolagem infinita para carregar mais itens conforme o usuário rola para o final da lista. O método carregar_itens adiciona os itens à tela conforme a página é alterada. A tela lida com a navegação de maneira eficiente e permite ao usuário visualizar uma quantidade maior de itens sem sobrecarregar a memória.
+
+3. error_screen.py - Tela de Erro
+python
+Copiar código
+import flet as ft
+
+class ErrorScreen(ft.UserControl):
+    def __init__(self, error_message):
+        super().__init__()
+        self.error_message = error_message
+
+    def build(self):
+        return ft.Column([ft.Text(self.error_message, color=ft.colors.RED)])
+Comentário:
+Esta tela é útil para exibir mensagens de erro, como falhas de carregamento de dados ou problemas na comunicação com o servidor. É uma forma eficiente de tratar e informar o usuário de que algo deu errado na operação.
+
+3. /services/ - Lógica de Negócios e Integração
+Papel:
+Esta pasta contém a lógica de integração com fontes externas de dados (como APIs) e manipulação do estado da aplicação. Aqui você define os serviços que interagem com bancos de dados ou APIs para buscar, processar e fornecer dados para as telas.
+
+Exemplos práticos:
+1. api_service.py - Serviço de API
+python
+Copiar código
+import requests
+
+class ApiService:
+    @staticmethod
+    def get_itens_da_categoria(categoria):
+        url = f"http://api.exemplo.com/{categoria}"
+        response = requests.get(url)
+        if response.status_code == 200:
+            return response.json()
+        return []
+Comentário:
+Este serviço faz uma requisição HTTP para obter os itens de uma categoria de um servidor remoto. Ele retorna os itens no formato JSON, o que pode ser diretamente utilizado nas telas para exibição. Esse serviço isola a lógica de comunicação com o servidor, permitindo que a UI apenas se preocupe com a apresentação.
+
+2. data_service.py - Serviço de Cache Local
+python
+Copiar código
+class DataService:
+    def __init__(self):
+        self.cache = {}
+
+    def cache_itens(self, categoria, itens):
+        self.cache[categoria] = itens
+
+    def get_itens_cache(self, categoria):
+        return self.cache.get(categoria, [])
+Comentário:
+Este serviço gerencia o cache local dos itens. Quando um item é carregado pela primeira vez, ele é armazenado no cache. Se for necessário carregar novamente, o serviço primeiro verifica se os dados estão disponíveis localmente. Isso melhora a performance e reduz a necessidade de chamadas repetidas para o servidor.
+
+3. pedido_service.py - Serviço de Pedido
+python
+Copiar código
+class PedidoService:
+    def __init__(self):
+        self.pedidos = []
+
+    def adicionar_pedido(self, pedido):
+        self.pedidos.append(pedido)
+        return "Pedido adicionado com sucesso!"
+
+
+Claro! Aqui está uma documentação organizada sobre cada pasta do sistema, com a descrição do seu papel e exemplos práticos de implementação de componentes, telas, serviços, etc., para ajudar na compreensão de como cada parte do sistema funciona e sua contribuição para a arquitetura geral. Abaixo segue a documentação detalhada:
+
+Documentação do Sistema de Restaurante - Estrutura de Pastas
+1. /components/ - Componentes Reutilizáveis
+Papel:
+Esta pasta contém todos os componentes de interface do usuário (UI) que são reutilizáveis ao longo da aplicação. Eles encapsulam funcionalidades específicas e são utilizados nas telas principais, como botões, cards de itens do cardápio, indicadores de carregamento e listas dinâmicas. O objetivo é manter a interface modular, reutilizável e fácil de modificar.
+
+Exemplos práticos:
+1. categoria_button.py - Botão de Categoria
+python
+Copiar código
+import flet as ft
+
+class CategoriaButton(ft.ElevatedButton):
+    def __init__(self, categoria, on_click):
+        super().__init__(text=categoria, on_click=on_click)
+        self.categoria = categoria
+Comentário:
+Este componente representa um botão para cada categoria de itens do cardápio. Ele recebe como parâmetro o nome da categoria e uma função de callback para lidar com o evento de clique. A ideia é tornar este botão reutilizável para qualquer categoria, o que facilita a manutenção.
+
+2. item_card.py - Card de Item
+python
+Copiar código
+import flet as ft
+
+class ItemCard(ft.UserControl):
+    def __init__(self, nome, descricao, preco):
+        super().__init__()
+        self.nome = nome
+        self.descricao = descricao
+        self.preco = preco
+
+    def build(self):
+        return ft.Row([
+            ft.Text(self.nome, weight=ft.FontWeight.BOLD),
+            ft.Text(self.descricao),
+            ft.Text(f"R${self.preco:.2f}"),
+        ])
+Comentário:
+Esse componente exibe as informações de cada item do cardápio em um formato organizado. Ele é composto por três elementos: nome do item, descrição e preço. O ItemCard pode ser reutilizado em várias telas onde os itens precisam ser listados, como nas telas de categorias ou ao visualizar o pedido.
+
+3. loading_indicator.py - Indicador de Carregamento
+python
+Copiar código
+import flet as ft
+
+class LoadingIndicator(ft.UserControl):
+    def build(self):
+        return ft.Column([ft.ProgressRing(indeterminate=True)])
+Comentário:
+Este componente exibe um indicador de carregamento (spinner) enquanto a aplicação está processando dados ou aguardando uma resposta de rede. Ele é útil para exibir quando o sistema está carregando a lista de itens ou processando um pedido, melhorando a experiência do usuário.
+
+4. list_view_scroll.py - Lista Rolável com Carregamento Infinito
+python
+Copiar código
+import flet as ft
+
+class InfiniteListView(ft.UserControl):
+    def __init__(self, load_more_callback):
+        super().__init__()
+        self.load_more_callback = load_more_callback
+
+    def build(self):
+        self.list_view = ft.ListView(on_scroll_to_bottom=self.load_more_callback)
+        return self.list_view
+Comentário:
+Este componente exibe uma lista rolável de itens e chama um callback sempre que o usuário chega ao final da lista, possibilitando o carregamento de mais itens (rolagem infinita). Isso é ideal para mostrar uma quantidade grande de itens do cardápio sem sobrecarregar a interface inicial.
+
+2. /screens/ - Telas da Aplicação
+Papel:
+Esta pasta contém os arquivos responsáveis pelas telas da aplicação. Cada tela é uma unidade que apresenta uma interface visual específica, com base nos componentes reutilizáveis da pasta /components/. Aqui, você define a lógica de apresentação das informações e interação com o usuário, como telas de categorias, cardápio, pedidos, entre outros.
+
+Exemplos práticos:
+1. menu_screen.py - Tela Principal (Menu)
+python
+Copiar código
+import flet as ft
+from components.categoria_button import CategoriaButton
+
+class MenuScreen(ft.UserControl):
+    def build(self):
+        categoria_buttons = [
+            CategoriaButton(categoria, self.on_categoria_click)
+            for categoria in ["Salgados", "Doces"]
+        ]
+        return ft.Column(categoria_buttons)
+
+    def on_categoria_click(self, e):
+        categoria = e.control.categoria
+        print(f"Clicado na categoria: {categoria}")
+Comentário:
+A tela principal exibe os botões de categorias. Cada botão é instanciado utilizando o componente CategoriaButton, e ao ser clicado, o evento chama o método on_categoria_click para exibir ou carregar os itens relacionados à categoria escolhida. Isso facilita a navegação do usuário e organiza o cardápio por categorias.
+
+2. categoria_screen.py - Tela de Categoria
+python
+Copiar código
+import flet as ft
+from components.item_card import ItemCard
+from components.loading_indicator import LoadingIndicator
+
+class CategoriaScreen(ft.UserControl):
+    def __init__(self, categoria, items):
+        super().__init__()
+        self.categoria = categoria
+        self.items = items
+        self.pagina_atual = 0
+        self.carregando = False
+
+    def build(self):
+        self.list_view = ft.ListView(on_scroll_to_bottom=self.carregar_mais_itens)
+        self.carregar_itens(self.pagina_atual)
+        return self.list_view
+
+    def carregar_itens(self, pagina_atual):
+        items_para_exibir = self.items[pagina_atual * 5: (pagina_atual + 1) * 5]
+        for item in items_para_exibir:
+            self.list_view.controls.append(ItemCard(item["nome"], item["descricao"], item["preco"]))
+        self.update()
+
+    def carregar_mais_itens(self, event):
+        if self.carregando:
+            return
+        self.carregando = True
+        self.pagina_atual += 1
+        self.carregar_itens(self.pagina_atual)
+        self.carregando = False
+Comentário:
+Essa tela exibe os itens de uma categoria específica e utiliza rolagem infinita para carregar mais itens conforme o usuário rola para o final da lista. O método carregar_itens adiciona os itens à tela conforme a página é alterada. A tela lida com a navegação de maneira eficiente e permite ao usuário visualizar uma quantidade maior de itens sem sobrecarregar a memória.
+
+3. error_screen.py - Tela de Erro
+python
+Copiar código
+import flet as ft
+
+class ErrorScreen(ft.UserControl):
+    def __init__(self, error_message):
+        super().__init__()
+        self.error_message = error_message
+
+    def build(self):
+        return ft.Column([ft.Text(self.error_message, color=ft.colors.RED)])
+Comentário:
+Esta tela é útil para exibir mensagens de erro, como falhas de carregamento de dados ou problemas na comunicação com o servidor. É uma forma eficiente de tratar e informar o usuário de que algo deu errado na operação.
+
+3. /services/ - Lógica de Negócios e Integração
+Papel:
+Esta pasta contém a lógica de integração com fontes externas de dados (como APIs) e manipulação do estado da aplicação. Aqui você define os serviços que interagem com bancos de dados ou APIs para buscar, processar e fornecer dados para as telas.
+
+Exemplos práticos:
+1. api_service.py - Serviço de API
+python
+Copiar código
+import requests
+
+class ApiService:
+    @staticmethod
+    def get_itens_da_categoria(categoria):
+        url = f"http://api.exemplo.com/{categoria}"
+        response = requests.get(url)
+        if response.status_code == 200:
+            return response.json()
+        return []
+Comentário:
+Este serviço faz uma requisição HTTP para obter os itens de uma categoria de um servidor remoto. Ele retorna os itens no formato JSON, o que pode ser diretamente utilizado nas telas para exibição. Esse serviço isola a lógica de comunicação com o servidor, permitindo que a UI apenas se preocupe com a apresentação.
+
+2. data_service.py - Serviço de Cache Local
+python
+Copiar código
+class DataService:
+    def __init__(self):
+        self.cache = {}
+
+    def cache_itens(self, categoria, itens):
+        self.cache[categoria] = itens
+
+    def get_itens_cache(self, categoria):
+        return self.cache.get(categoria, [])
+Comentário:
+Este serviço gerencia o cache local dos itens. Quando um item é carregado pela primeira vez, ele é armazenado no cache. Se for necessário carregar novamente, o serviço primeiro verifica se os dados estão disponíveis localmente. Isso melhora a performance e reduz a necessidade de chamadas repetidas para o servidor.
+
+3. pedido_service.py - Serviço de Pedido
+python
+Copiar código
+class PedidoService:
+    def __init__(self):
+        self.pedidos = []
+
+    def adicionar_pedido(self, pedido):
+        self.pedidos.append(pedido)
+        return "Pedido adicionado com sucesso!"
+Comentário:
+Este serviço gerencia os pedidos dos clientes. Ele armazena os pedidos em memória (ou poderia ser expandido para usar um banco de dados) e fornece métodos para adicionar um novo pedido. Esse serviço pode ser expandido para incluir funcionalidades como gerar um identificador único para cada pedido e salvar no banco de dados.
+
+4. /models/ - Modelos de Dados
+Papel:
+A pasta /models/ contém as classes que representam as entidades centrais do sistema, como Item, Pedido e Comanda. Esses modelos estruturam os dados que serão manipulados pela aplicação.
+
+Exemplos práticos:
+1. item_model.py - Modelo de Item
+
+
+class Item:
+    def __init__(self, nome, descricao, preco, categoria):
+        self.nome = nome
+        self.descricao = descricao
+        self.preco = preco
+        self.categoria = categoria
+Comentário:
+Esta classe representa um item do cardápio. Cada item tem um nome, descrição, preço e categoria. O modelo de dados ajuda a garantir que os itens sejam manipulados de maneira consistente no código.
+
+2. pedido_model.py - Modelo de Pedido
+python
+Copiar código
+class Pedido:
+    def __init__(self, cliente, itens):
+        self.cliente = cliente
+        self.itens = itens
+        self.status = "Em andamento"
+Comentário:
+Este modelo de pedido contém informações sobre o cliente e os itens comprados. Ele pode ser utilizado para rastrear o progresso de um pedido ou para cálculos relacionados ao total do pedido.
+
+Conclusão
+Esta documentação descreve como o sistema de um restaurante pode ser organizado de forma modular e reutilizável, utilizando uma arquitetura bem definida com pastas para componentes, telas, serviços e modelos. Cada parte do sistema tem uma função clara e contribui para a construção de um sistema escalável e fácil de manter.
+
+Benefícios:
+Reusabilidade de componentes e lógica.
+Separação de responsabilidades, facilitando a manutenção e testes.
+Escalabilidade, permitindo adicionar novas funcionalidades com mínima alteração no código existente.
+A organização modular é essencial para garantir que o sistema seja flexível e fácil de manter à medida que o projeto cresce.
+
+
+
+
+
+
+
+
+
+meu_sistema/
+│
+├── main.py                     # Ponto de entrada
+│
+├── app/
+│   ├── __init__.py             # Inicialização do módulo app
+│   ├── routes.py               # Gerenciamento de rotas
+│
+├── components/
+│   ├── __init__.py             # Inicialização dos componentes
+│   ├── input_fields.py         # Entrada de dados (comanda e nome)
+│   ├── navbar.py               # Navbar com navegação
+│   ├── header.py               # Header (nome do cliente e comanda)
+│   ├── category_list.py        # Lista de categorias
+│   └── product_list.py         # Lista de produtos
+│
+├── screens/
+│   ├── __init__.py             # Inicialização das telas
+│   ├── home_screen.py          # Tela inicial
+│   ├── category_screen.py      # Tela de categorias
+│   ├── product_screen.py       # Tela de produtos por categoria
+│   ├── cart_screen.py          # Tela da sacola do cliente
+│   └── client_list_screen.py   # Tela de todos os clientes
+│
+├── models/
+│   ├── __init__.py             # Inicialização dos modelos
+│   ├── client.py               # Modelo de dados do cliente
+│   ├── category.py             # Modelo de dados de categoria
+│   └── product.py              # Modelo de dados de produto
+│
+├── services/
+│   ├── __init__.py             # Inicialização dos serviços
+│   ├── category_service.py     # Lógica para categorias
+│   ├── product_service.py      # Lógica para produtos
+│   ├── cart_service.py         # Lógica para gerenciamento da sacola
+│   └── client_service.py       # Lógica para gerenciar clientes
+│
+├── utils/
+│   ├── __init__.py             # Inicialização das utilidades
+│   ├── validations.py          # Validação de dados
+│   └── helpers.py              # Funções utilitárias
+│
+└── assets/
+|   ├── css/                    # Estilos adicionais
+|   ├── images/                 # Imagens do sistema
+|   └── fonts/                  # Fontes personalizadas
+|
+|    config/
+├── __init__.py
+├   constants.py                Apenas constantes.
+├   styles.py                   Cores, fontes, e estilos.
+└   paths.py                    Caminhos para imagens, arquivos ou recursos.
+

@@ -1,0 +1,149 @@
+## Documentação do Sistema de Restaurante - Estrutura de Pastas
+
+### 1. /components/ - Componentes Reutilizáveis
+
+**Papel:**
+Esta pasta contém todos os componentes de interface do usuário (UI) que são reutilizáveis ao longo da aplicação. Eles encapsulam funcionalidades específicas e são utilizados nas telas principais, como botões, cards de itens do cardápio, indicadores de carregamento e listas dinâmicas. O objetivo é manter a interface modular, reutilizável e fácil de modificar.
+
+**Exemplos práticos:**
+
+1. **categoria_button.py - Botão de Categoria**
+   ```python
+   import flet as ft
+
+   class CategoriaButton(ft.ElevatedButton):
+       def __init__(self, categoria, on_click):
+           super().__init__(text=categoria, on_click=on_click)
+           self.categoria = categoria
+   ```
+   **Comentário:**
+   Este componente representa um botão para cada categoria de itens do cardápio. Ele recebe como parâmetro o nome da categoria e uma função de callback para lidar com o evento de clique. A ideia é tornar este botão reutilizável para qualquer categoria, o que facilita a manutenção.
+
+2. **item_card.py - Card de Item**
+   ```python
+   import flet as ft
+
+   class ItemCard(ft.UserControl):
+       def __init__(self, nome, descricao, preco):
+           super().__init__()
+           self.nome = nome
+           self.descricao = descricao
+           self.preco = preco
+
+       def build(self):
+           return ft.Row([
+               ft.Text(self.nome, weight=ft.FontWeight.BOLD),
+               ft.Text(self.descricao),
+               ft.Text(f"R${self.preco:.2f}"),
+           ])
+   ```
+   **Comentário:**
+   Esse componente exibe as informações de cada item do cardápio em um formato organizado. Ele é composto por três elementos: nome do item, descrição e preço. O ItemCard pode ser reutilizado em várias telas onde os itens precisam ser listados, como nas telas de categorias ou ao visualizar o pedido.
+
+3. **loading_indicator.py - Indicador de Carregamento**
+   ```python
+   import flet as ft
+
+   class LoadingIndicator(ft.UserControl):
+       def build(self):
+           return ft.Column([ft.ProgressRing(indeterminate=True)])
+   ```
+   **Comentário:**
+   Este componente exibe um indicador de carregamento (spinner) enquanto a aplicação está processando dados ou aguardando uma resposta de rede. Ele é útil para exibir quando o sistema está carregando a lista de itens ou processando um pedido, melhorando a experiência do usuário.
+
+4. **list_view_scroll.py - Lista Rolável com Carregamento Infinito**
+   ```python
+   import flet as ft
+
+   class InfiniteListView(ft.UserControl):
+       def __init__(self, load_more_callback):
+           super().__init__()
+           self.load_more_callback = load_more_callback
+
+       def build(self):
+           self.list_view = ft.ListView(on_scroll_to_bottom=self.load_more_callback)
+           return self.list_view
+   ```
+   **Comentário:**
+   Este componente exibe uma lista rolável de itens e chama um callback sempre que o usuário chega ao final da lista, possibilitando o carregamento de mais itens (rolagem infinita). Isso é ideal para mostrar uma quantidade grande de itens do cardápio sem sobrecarregar a interface inicial.
+
+---
+
+### 2. /screens/ - Telas da Aplicação
+
+**Papel:**
+Esta pasta contém os arquivos responsáveis pelas telas da aplicação. Cada tela é uma unidade que apresenta uma interface visual específica, com base nos componentes reutilizáveis da pasta /components/. Aqui, você define a lógica de apresentação das informações e interação com o usuário, como telas de categorias, cardápio, pedidos, entre outros.
+
+**Exemplos práticos:**
+
+1. **menu_screen.py - Tela Principal (Menu)**
+   ```python
+   import flet as ft
+   from components.categoria_button import CategoriaButton
+
+   class MenuScreen(ft.UserControl):
+       def build(self):
+           categoria_buttons = [
+               CategoriaButton(categoria, self.on_categoria_click)
+               for categoria in ["Salgados", "Doces"]
+           ]
+           return ft.Column(categoria_buttons)
+
+       def on_categoria_click(self, e):
+           categoria = e.control.categoria
+           print(f"Clicado na categoria: {categoria}")
+   ```
+   **Comentário:**
+   A tela principal exibe os botões de categorias. Cada botão é instanciado utilizando o componente CategoriaButton, e ao ser clicado, o evento chama o método `on_categoria_click` para exibir ou carregar os itens relacionados à categoria escolhida. Isso facilita a navegação do usuário e organiza o cardápio por categorias.
+
+2. **categoria_screen.py - Tela de Categoria**
+   ```python
+   import flet as ft
+   from components.item_card import ItemCard
+   from components.loading_indicator import LoadingIndicator
+
+   class CategoriaScreen(ft.UserControl):
+       def __init__(self, categoria, items):
+           super().__init__()
+           self.categoria = categoria
+           self.items = items
+           self.pagina_atual = 0
+           self.carregando = False
+
+       def build(self):
+           self.list_view = ft.ListView(on_scroll_to_bottom=self.carregar_mais_itens)
+           self.carregar_itens(self.pagina_atual)
+           return self.list_view
+
+       def carregar_itens(self, pagina_atual):
+           items_para_exibir = self.items[pagina_atual * 5: (pagina_atual + 1) * 5]
+           for item in items_para_exibir:
+               self.list_view.controls.append(ItemCard(item["nome"], item["descricao"], item["preco"]))
+           self.update()
+
+       def carregar_mais_itens(self, event):
+           if self.carregando:
+               return
+           self.carregando = True
+           self.pagina_atual += 1
+           self.carregar_itens(self.pagina_atual)
+           self.carregando = False
+   ```
+   **Comentário:**
+   Essa tela exibe os itens de uma categoria específica e utiliza rolagem infinita para carregar mais itens conforme o usuário rola para o final da lista. O método `carregar_itens` adiciona os itens à tela conforme a página é alterada. A tela lida com a navegação de maneira eficiente e permite ao usuário visualizar uma quantidade maior de itens sem sobrecarregar a memória.
+
+3. **error_screen.py - Tela de Erro**
+   ```python
+   import flet as ft
+
+   class ErrorScreen(ft.UserControl):
+       def __init__(self, error_message):
+           super().__init__()
+           self.error_message = error_message
+
+       def build(self):
+           return ft.Column([ft.Text(self.error_message, color=ft.colors.RED)])
+   ```
+   **Comentário:**
+   Esta tela 
+
