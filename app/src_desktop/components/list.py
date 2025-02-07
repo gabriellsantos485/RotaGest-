@@ -2,6 +2,12 @@ import flet as ft
 from flet import Container, Text, Row, Column, IconButton, icons, MainAxisAlignment, Page
 from config.constant import SCREEN_WIDTH
 from components.com_appContainer import AppContainer
+from components.OrderPaymentDialog import OrderPaymentDialog
+
+itens = [
+        {"name": "Pizza", "quantity": 1},
+        {"name": "Refrigerante", "quantity": 2},
+    ]
 
 class TabelaDinamica:
     """
@@ -23,41 +29,53 @@ class TabelaDinamica:
         self.__dados = []
         self.__on_pagamento = None
         self.__on_cancelamento = None
-        self.base=AppContainer(page)
+        self.base = AppContainer(page)
 
     def set_dados(self, dados: list):
-        """
-        Define os dados dinâmicos da tabela.
-
-        Args:
-            dados (list): Lista de dicionários com os dados a serem exibidos.
-        """
+        """Define os dados dinâmicos da tabela."""
         self.__dados = dados
 
     def on_pagamento_click(self, callback):
-        """
-        Registra um callback para o botão "Efetuar Pagamento".
-
-        Args:
-            callback (function): Função chamada ao clicar no botão de pagamento.
-        """
+        """Registra um callback para o botão de pagamento."""
         self.__on_pagamento = callback
 
     def on_cancelamento_click(self, callback):
-        """
-        Registra um callback para o botão "Cancelar Pedido".
-
-        Args:
-            callback (function): Função chamada ao clicar no botão de cancelamento.
-        """
+        """Registra um callback para o botão de cancelamento."""
         self.__on_cancelamento = callback
+
+    def _obter_pedido_id(self, linha_dados):
+        """
+        Obtém o ID do pedido a partir dos dados da linha.
+        """
+        return linha_dados.get("N° do Pedido", None)
+
+    def _criar_botoes_acao(self, linha_dados):
+        """
+        Cria os botões de ação para a linha da tabela.
+        """
+        pedido_id = self._obter_pedido_id(linha_dados)
+
+        return Row(
+            controls=[
+                IconButton(
+                    icon=icons.PAYMENTS,
+                    tooltip="Efetuar Pagamento",
+                    icon_color="green",
+                    on_click=lambda _: self.efetuar_pagamento(pedido_id),
+                ),
+                IconButton(
+                    icon=icons.CANCEL,
+                    tooltip="Cancelar Pedido",
+                    icon_color="red",
+                    on_click=lambda _: self.cancelar_pedido(pedido_id),
+                ),
+            ],
+            alignment=MainAxisAlignment.END,
+        )
 
     def _criar_cabecalhos(self):
         """
         Cria a linha de cabeçalhos.
-
-        Returns:
-            Row: Linha contendo os cabeçalhos.
         """
         return Row(
             controls=[
@@ -65,39 +83,14 @@ class TabelaDinamica:
                 for cabecalho in self.cabecalhos
             ],
             alignment=MainAxisAlignment.SPACE_BETWEEN,
-            
         )
 
     def _criar_linha(self, linha_dados: dict):
         """
         Cria uma linha com base nos dados.
-
-        Args:
-            linha_dados (dict): Dicionário com os dados da linha.
-
-        Returns:
-            Container: Linha formatada.
         """
-        # Botões para ações
-        botoes = Row(
-            controls=[
-                IconButton(
-                    icon=icons.PAYMENTS,
-                    tooltip="Efetuar Pagamento",
-                    icon_color="green",
-                    on_click=lambda _: self.page.go("/pagamento")
-                ),
-                IconButton(
-                    icon=icons.CANCEL,
-                    tooltip="Cancelar Pedido",
-                    icon_color="red",
-                    on_click=self.cancelar_pedido
-                ),
-            ],
-            alignment=MainAxisAlignment.END,
-        )
+        botoes = self._criar_botoes_acao(linha_dados)
 
-        # Linha com os dados e botões
         return Container(
             content=Row(
                 controls=[
@@ -115,34 +108,42 @@ class TabelaDinamica:
     def build(self):
         """
         Constrói a tabela completa.
-
-        Returns:
-            Column: Tabela com cabeçalhos e linhas.
         """
         linhas = [self._criar_linha(dados) for dados in self.__dados]
         return Column(
             controls=[self._criar_cabecalhos()] + linhas,
             spacing=10,
-            width=SCREEN_WIDTH
+            width=SCREEN_WIDTH,
         )
-    def __password(self, senha):
+
+    def __validar_senha(self, senha, pedido_id):
         """
-        Valida a senha e exibe uma mensagem de confirmação ou erro.
+        Valida a senha antes de cancelar o pedido.
         """
-        if senha == 'teste':
-            print(senha) #self.base.mensagens_dialog("Senha correta. Pedido cancelado com sucesso.", tipo="success", conf=False)
+        if senha == "teste":
+            print(f"Pedido {pedido_id} cancelado com sucesso!")
+            # self.base.mensagens_dialog("Pedido cancelado com sucesso.", tipo="success", conf=False)
         else:
             self.base.mensagens_dialog("Senha incorreta. Tente novamente.", tipo="error", conf=False)
 
-    def cancelar_pedido(self, e):
+    def cancelar_pedido(self, pedido_id):
         """
         Exibe o diálogo solicitando a senha do administrador para cancelar o pedido.
         """
         self.base.mensagens_dialog(
-            "Para CANCELAR o pedido, digite a senha de administrador:",
+            f"Para CANCELAR o pedido {pedido_id}, digite a senha de administrador:",
             tipo="alert",
             conf=True,
-            on_confirm=self.__password,  # Passa o callback corretamente
+            on_confirm=lambda senha: self.__validar_senha(senha, pedido_id),
         )
 
-            
+    def efetuar_pagamento(self, pedido_id):
+        opd = OrderPaymentDialog(self.page, pedido_id, itens, 100)
+        """
+        Realiza a ação de pagamento do pedido.
+        """
+        print(f"Pagamento do pedido {pedido_id} realizado.")
+        opd.open_dialog()
+        # Aqui você pode adicionar a lógica para efetuar o pagamento
+        
+        

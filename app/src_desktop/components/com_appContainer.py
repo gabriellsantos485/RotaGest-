@@ -173,3 +173,13 @@ class AppContainer:
 
     def set_bgcolor(self, bgcolor):
         self.__bgcolor = bgcolor
+        
+    def go_nav(self, route, data = None):
+        """
+        Navigates to the specified route.
+
+        Args:
+            route (str): The route to navigate to.
+            data (dict): Optional data to pass to the route.
+        """
+        self.page.route()
