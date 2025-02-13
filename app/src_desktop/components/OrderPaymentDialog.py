@@ -1,109 +1,220 @@
 import flet as ft
+from config.constant import SCREEN_WIDTH, SCREEN_HEIGHT
+from services.MercadoPago import pay_buy
 
 class OrderPaymentDialog:
     def __init__(self, page: ft.Page, order_id: int, items: list, total_price: float):
-        """
-        Creates a payment dialog for an order.
-        
-        Args:
-            page (ft.Page): The main page instance.
-            order_id (int): The ID of the order.
-            items (list): A list of dictionaries containing item names and quantities.
-            total_price (float): The total amount to be paid.
-        """
         self.page = page
         self.order_id = order_id
         self.items = items
         self.total_price = total_price
         self.dialog = None
+        self.total_price = total_price
 
-    def build_dialog(self):
+        # Criar o texto do botão para poder alterá-lo depois
+        self.btn_pay_text = ft.Text("Selecionar método de pagamento", color=ft.colors.WHITE, size=18)
+
+    def buildPay(self):
         """
         Builds the AlertDialog for displaying order details and payment options.
         """
-        
-        # Create order details text
-        order_details = [ft.Text(f"Pedido #{self.order_id}", weight=ft.FontWeight.BOLD, size=18)]
-        
-        for item in self.items:
-            order_details.append(
-                ft.Text(f"{item['name']} x{item['quantity']}", size=18, font_family="Lato")
-            )
-        
-        order_details.append(
+        # Responsable for screen of payment 
+        screen_paybuy = [
             ft.Container(
-                content=ft.Text(
-                    f"Total: R$ {self.total_price:.2f}", 
-                    size=18, 
-                    color=ft.colors.BLUE,
-                    text_align="center"
-                ),
+                content=ft.Row(
+                    controls=[
+                        ft.Card(
+                            color="#4D64DB",
+                            width=520,
+                            height=450,
+                            content=ft.Column(
+                                controls=[
+                                    ft.Row([
+                                        ft.Container(
+                                            border_radius=10,
+                                            margin=10,
+                                            padding=10,
+                                            bgcolor="#081450",
+                                            width=490,
+                                            height=70,
+                                            content=ft.Column([
+                                                ft.Container(
+                                                    content=ft.Text(
+                                                        "CLIENTE",
+                                                        size=10,
+                                                        color=ft.colors.WHITE,
+                                                        weight=ft.FontWeight.BOLD,
+                                                    ),
+                                                    width=490,
+                                                    height=12
+                                                ),
+                                                ft.Row([
+                                                    ft.Container(
+                                                        bgcolor=ft.colors.WHITE,
+                                                        width=100,
+                                                        height=30,
+                                                        content=ft.Text("1", size=24)
+                                                    ),
+                                                    ft.Container(
+                                                        bgcolor=ft.colors.WHITE,
+                                                        width=300,
+                                                        height=30,
+                                                        content=ft.Text("CLIENTE 1", size=24),
+                                                    ),
+                                                ])
+                                            ])
+                                        )
+                                    ]),
+                                    
+                                    # Botão de pagamento 
+                                    ft.Row([
+                                        ft.Container(
+                                            border_radius=10,
+                                            margin=10,
+                                            padding=10,
+                                            bgcolor="#081450",
+                                            width=490,
+                                            height=70,
+                                            content=ft.Column([
+                                                ft.Container(
+                                                    content=ft.Text("FORMA DE PAGAMENTO", color=ft.colors.WHITE, size=12, weight=ft.FontWeight.BOLD),
+                                                    width=490,
+                                                    height=18        
+                                                ),
+                                                ft.Container(
+                                                    content=ft.PopupMenuButton(
+                                                        content=self.btn_pay_text,  # Usa a variável de classe
+                                                        items=[
+                                                            ft.PopupMenuItem(text="Cartão de Crédito", on_click=self.__selecionar_pagamento),
+                                                            ft.PopupMenuItem(text="Pix", on_click=self.__selecionar_pagamento),
+                                                            ft.PopupMenuItem(text="Boleto", on_click=self.__selecionar_pagamento),
+                                                        ],
+                                                        bgcolor=ft.colors.AMBER_100,                                                                                                                    
+                                                    ),
+                                                    bgcolor="#967FF0",
+                                                    width=490,
+                                                    height=25,
+                                                    border_radius=10
+                                                )
+                                            ],
+                                            alignment=ft.MainAxisAlignment.START)
+                                        )
+                                    ]),
+                                    
+                                    # Total of Order
+                                    ft.Row(
+                                        [
+                                            ft.Container(
+                                                width=490,
+                                                height=70,
+                                                border_radius=10,
+                                                bgcolor="#081450",
+                                                padding=10,
+                                                margin=10,
+                                                content=ft.Column(
+                                                    [
+                                                        ft.Row(
+                                                            [
+                                                                ft.Text(
+                                                                    "TOTAL",
+                                                                    size=12,
+                                                                    color=ft.colors.WHITE,
+                                                                    weight=ft.FontWeight.BOLD
+                                                                )
+                                                            ]
+                                                        ),
+                                                        ft.Row(
+                                                            [
+                                                                ft.Text("R$ 100,00",
+                                                                        size=20,
+                                                                        color=ft.colors.WHITE,
+                                                                        weight=ft.FontWeight.BOLD
+                                                                        )
+                                                            ],
+                                                        alignment=ft.MainAxisAlignment.END
+                                                        )
+                                                    ]
+                                                )
+                                            )
+                                        ]
+                                    ),
+                                    
+                                    #Button Finish
+                                    ft.Row(
+                                        [
+                                            ft.Container(
+                                                content=ft.ElevatedButton(
+                                                    content=ft.Text("Finalizar", color=ft.colors.WHITE, size=28),
+                                                    bgcolor="#F09013",
+                                                    on_click=self._payment,
+                                                    width=490,
+                                                    height=40,
+                                                ),
+                                                padding=5,
+                                                margin=10
+                                            )
+                                        ]
+                                    )                               ]
+                            )
+                        ),
+                        ft.Card(
+                            color=ft.colors.WHITE,
+                            width=650,
+                            height=450,
+                            content=ft.Column(
+                                [
+                                    ft.Container(
+                                        width=650,
+                                        height=40,
+                                        bgcolor=ft.colors.BLUE_900,
+                                        content=ft.Text("Lista de Itens", color=ft.colors.WHITE, size=28, weight=ft.FontWeight.BOLD, text_align="center"), 
+                                    ),
+                                ]
+                            )
+                            
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN
+                )      
             )
-        )
-        
-        # Payment button
-        payment_button = ft.TextButton(
-            "Escolher Forma de Pagamento",
-            on_click=self.handle_payment_selection,
-            width=250,
-            height=40,
-        )
-        
-        # Create the dialog
+        ] 
+
+        # Criando a caixa de diálogo
         self.dialog = ft.AlertDialog(
             modal=True,
-            title=ft.Text("Pagamento do Pedido", weight=ft.FontWeight.BOLD),
+            title=ft.Text("Finalizar Pedido", weight=ft.FontWeight.BOLD),
             content=ft.Container(
-                content=ft.Column(order_details + [payment_button], spacing=10, width=700),
+                content=ft.Column(screen_paybuy, spacing=10, width=SCREEN_WIDTH * 0.94, height=SCREEN_HEIGHT * 0.94),
                 padding=20,
-                bgcolor=ft.colors.AMBER_50,
-                
             ),
             actions=[
                 ft.TextButton("Fechar", on_click=lambda e: self.close_dialog())
             ],
-            bgcolor=ft.colors.WHITE70,
+            bgcolor="#9F9DEF",
         )
-        
+
         return self.dialog
 
     def open_dialog(self):
-        """
-        Opens the payment dialog.
-        """
-        self.page.dialog = self.build_dialog()
+        """Abre o diálogo de pagamento."""
+        self.page.dialog = self.buildPay()
         self.page.dialog.open = True
         self.page.update()
     
     def close_dialog(self):
-        """
-        Closes the payment dialog.
-        """
+        """Fecha o diálogo de pagamento."""
         if self.dialog:
             self.dialog.open = False
             self.page.update()
     
-    def handle_payment_selection(self, e):
-        """
-        Handles the selection of the payment method.
-        """
-        print("Redirecting to payment selection...")
-        # Here, you can navigate to another screen or open another dialog.
-        self.close_dialog()
-
-# ============================= GUIDE =============================
-# How to use OrderPaymentDialog:
-#
-# 1. Initialize the dialog with order details:
-#    payment_dialog = OrderPaymentDialog(page, order_id=123, items=[
-#        {'name': 'Burger', 'quantity': 2},
-#        {'name': 'Soda', 'quantity': 1}
-#    ], total_price=25.50)
-#
-# 2. Open the dialog when needed:
-#    payment_dialog.open_dialog()
-#
-# 3. The user will see the order details and a button to select payment.
-# 4. Clicking the button will trigger `handle_payment_selection()`, which can be customized.
-# 5. The user can close the dialog at any time using the "Fechar" button.
-# =================================================================
+    def __selecionar_pagamento(self, e):
+        """Atualiza o texto do botão para a opção selecionada."""
+        self.btn_pay_text.value = e.control.text  # Atualiza o texto do botão
+        self.page.update()  # Atualiza a interface
+        
+    def _payment(self, e):
+        """Realiza o pagamento."""
+        # Implementar a lógica de pagamento aqui
+        resultado = pay_buy(self.total_price)
+        print(resultado)
+        print("Pagamento realizado com sucesso!")

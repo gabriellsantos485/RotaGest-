@@ -1,7 +1,7 @@
-from screens.scr_home import HomeScreen
+from screens.ScreenHome import ScreenHome
 import flet as ft
-from screens.scr_menu import Menu
-from screens.scr_pedido import Pedido
+from screens.ScreenMenu import ScreenMenu
+from screens.ScreenOrder import ScreenOrder
 
 def route_manager(page: ft.Page, route: str):
     """
@@ -15,7 +15,7 @@ def route_manager(page: ft.Page, route: str):
         page.views.append(
             ft.View(
                 route="/",
-                controls=[HomeScreen(page).get_widget()],
+                controls=[ScreenHome(page).buildHome()],
             )
         )
         
@@ -24,7 +24,7 @@ def route_manager(page: ft.Page, route: str):
         page.views.append(
             ft.View(
                 route="/menu",
-                controls=[Menu(page).build()],
+                controls=[ScreenMenu(page).buildMenu()],
             )
         )
         
@@ -33,7 +33,7 @@ def route_manager(page: ft.Page, route: str):
         page.views.append(
             ft.View(
                 route="/pedido",
-                controls=[Pedido(page).build()],
+                controls=[ScreenOrder(page).build()],
             )
         )
         

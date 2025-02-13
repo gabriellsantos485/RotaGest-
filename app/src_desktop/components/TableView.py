@@ -1,15 +1,17 @@
 import flet as ft
 from flet import Container, Text, Row, Column, IconButton, icons, MainAxisAlignment, Page
 from config.constant import SCREEN_WIDTH
-from components.com_appContainer import AppContainer
+from components.BasePage import BasePage
 from components.OrderPaymentDialog import OrderPaymentDialog
+from services.APIClient import APIClient
 
-itens = [
-        {"name": "Pizza", "quantity": 1},
-        {"name": "Refrigerante", "quantity": 2},
-    ]
+"""
+    Arquivo responsável por renderizar uma tabela dinâmica com cabeçalhos fixos.
+    Implementa métodos para adicionar dados à tabela, registrar callbacks para os botões de pagamento e cancelamento,
+    e renderizar a tabela na tela.
+"""
 
-class TabelaDinamica:
+class TableView:
     """
     Classe para criar uma tabela dinâmica com cabeçalhos fixos e dados dinâmicos.
     """
@@ -29,27 +31,26 @@ class TabelaDinamica:
         self.__dados = []
         self.__on_pagamento = None
         self.__on_cancelamento = None
-        self.base = AppContainer(page)
 
-    def set_dados(self, dados: list):
+    def set_dados(self, dados: list) -> str:
         """Define os dados dinâmicos da tabela."""
         self.__dados = dados
 
-    def on_pagamento_click(self, callback):
+    def on_pagamento_click(self, callback) -> str:
         """Registra um callback para o botão de pagamento."""
         self.__on_pagamento = callback
 
-    def on_cancelamento_click(self, callback):
+    def on_cancelamento_click(self, callback) -> callable:
         """Registra um callback para o botão de cancelamento."""
         self.__on_cancelamento = callback
 
-    def _obter_pedido_id(self, linha_dados):
+    def _obter_pedido_id(self, linha_dados) -> str:
         """
         Obtém o ID do pedido a partir dos dados da linha.
         """
         return linha_dados.get("N° do Pedido", None)
 
-    def _criar_botoes_acao(self, linha_dados):
+    def _criar_botoes_acao(self, linha_dados) ->Row:
         """
         Cria os botões de ação para a linha da tabela.
         """
@@ -73,7 +74,7 @@ class TabelaDinamica:
             alignment=MainAxisAlignment.END,
         )
 
-    def _criar_cabecalhos(self):
+    def _criar_cabecalhos(self) -> ft.Row:
         """
         Cria a linha de cabeçalhos.
         """
@@ -85,7 +86,7 @@ class TabelaDinamica:
             alignment=MainAxisAlignment.SPACE_BETWEEN,
         )
 
-    def _criar_linha(self, linha_dados: dict):
+    def _criar_linha(self, linha_dados: dict) -> Container:
         """
         Cria uma linha com base nos dados.
         """
@@ -105,7 +106,7 @@ class TabelaDinamica:
             border_radius=5,
         )
 
-    def build(self):
+    def build(self) -> Column: 
         """
         Constrói a tabela completa.
         """
@@ -116,7 +117,7 @@ class TabelaDinamica:
             width=SCREEN_WIDTH,
         )
 
-    def __validar_senha(self, senha, pedido_id):
+    def __validar_senha(self, senha, pedido_id) -> None:
         """
         Valida a senha antes de cancelar o pedido.
         """
@@ -124,21 +125,17 @@ class TabelaDinamica:
             print(f"Pedido {pedido_id} cancelado com sucesso!")
             # self.base.mensagens_dialog("Pedido cancelado com sucesso.", tipo="success", conf=False)
         else:
-            self.base.mensagens_dialog("Senha incorreta. Tente novamente.", tipo="error", conf=False)
-
-    def cancelar_pedido(self, pedido_id):
+            pass
         """
         Exibe o diálogo solicitando a senha do administrador para cancelar o pedido.
         """
-        self.base.mensagens_dialog(
-            f"Para CANCELAR o pedido {pedido_id}, digite a senha de administrador:",
-            tipo="alert",
-            conf=True,
-            on_confirm=lambda senha: self.__validar_senha(senha, pedido_id),
-        )
-
-    def efetuar_pagamento(self, pedido_id):
-        opd = OrderPaymentDialog(self.page, pedido_id, itens, 100)
+        
+    def efetuar_pagamento(self, pedido_id)->None:
+        api=APIClient()
+        data_orders_items=api.get_api(f"http://127.0.0.1:8000/api/itens-menu/filtrar_por_ped_id/?ped_id={pedido_id}")
+        
+        #dialog responsable of screen of payment
+        opd = OrderPaymentDialog(self.page, pedido_id, data_orders_items, 100)
         """
         Realiza a ação de pagamento do pedido.
         """
@@ -147,3 +144,4 @@ class TabelaDinamica:
         # Aqui você pode adicionar a lógica para efetuar o pagamento
         
         
+# [{'menu_id': 1, 'quantidade': 3}, {'menu_id': 6, 'quantidade': 2}, {'menu_id': 10, 'quantidade': 1}, {'menu_id': 11, 'quantidade': 3}, {'menu_id': 12, 'quantidade': 1}, {'menu_id': 13, 'quantidade': 2}]

@@ -24,7 +24,7 @@ class HomeScreen:
                     content=ft.Column(
                         controls=[
                             ft.Row(
-                                controls=[fieldName.render()]
+                                #controls=[fieldName.render()]
                             ),
                             ft.Row(
                                 controls=[comandNumber.render()]

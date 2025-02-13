@@ -1,5 +1,5 @@
 import requests
-from components.com_appContainer import AppContainer
+from components.BasePage import BasePage
 
 def cadastrar_categoria(nome, page):
     data = {'cat_nome': nome}

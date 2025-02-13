@@ -1,19 +1,19 @@
 import flet as ft
-from components.com_appContainer import AppContainer
+from components.BasePage import BasePage
 from components.botoes import Button
-from services.api import Api
+from services.APIClient import APIClient
 
-class CriarMenu:
+class LayoutCreateMenu(BasePage):
     def __init__(self, page):
+        super().__init__(page)
         self.page = page
-        self.base = AppContainer(page)
         self.btn_salvar = Button(page=page, color="#19721C")
         self.btn_salvar.set_onclick(self.salvar_dados)
         self.bgcolor = "white"
         self.__value_valor=None
         self.__value_nome=None
         self.__value_categoria=None
-        self.api = Api(page)
+        self.api = APIClient()
         
         # Criar referências para os campos
         self.nome_ref = ft.Ref[ft.TextField]()
@@ -40,7 +40,7 @@ class CriarMenu:
         categoria = self.categoria_ref.current.value
         
         if not nome or not valor or not categoria:
-            self.base.show_message("Preencha todos os campos!", "red")
+            self.app_mess("Preencha todos os campos!", "red")
         else:
         # Envio dos dados para a API
             self.api.set_api(self.__data(nome, valor, categoria))
@@ -52,8 +52,8 @@ class CriarMenu:
             # Atualizar a interface para refletir os valores resetados
             self.page.update()
 
-    def build(self):
-        content = ft.Container(
+    def content(self) -> ft.Container:
+        return ft.Container(
             content=ft.Column(
                 controls=[
                     ft.Row(
@@ -114,9 +114,6 @@ class CriarMenu:
             ),
             bgcolor="#22094D"
         )
-        
-        return self.base.build(content=content)
-
 
     def set_value_categoria(self, new_cat):
         self.__value_categoria = new_cat

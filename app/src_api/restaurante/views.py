@@ -1,6 +1,7 @@
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.db.models import Sum
 from rest_framework.permissions import AllowAny
 from rest_framework import status
 from .models import (
@@ -323,3 +324,20 @@ class ItemMenuViewSet(viewsets.ModelViewSet):
                 {"error": "Item não encontrado."},
                 status=status.HTTP_404_NOT_FOUND
             )
+            
+    @action(detail=False, methods=['get'])
+    def filtrar_por_ped_id(self, request):
+        """
+        Filtra os itens do menu pelo `ped_id` e retorna o `menu_id` com a quantidade correspondente.
+        """
+        ped_id = request.query_params.get('ped_id')
+        if not ped_id:
+            return Response({"error": "O parâmetro 'ped_id' é obrigatório."}, status=status.HTTP_400_BAD_REQUEST)
+
+        itens_filtrados = (
+            ItemMenu.objects.filter(ped_id=ped_id)
+            .values('menu_id')
+            .annotate(quantidade=Sum('ime_qtde'))  # Soma o campo ime_qtde
+        )
+
+        return Response(itens_filtrados, status=status.HTTP_200_OK)

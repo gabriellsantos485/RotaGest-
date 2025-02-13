@@ -1,6 +1,6 @@
 import flet as ft
 from routes.routes import route_manager
-from screens.scr_home import HomeScreen
+from screens.ScreenHome import ScreenHome
 from screens.app import AppConfigurator
 
 
@@ -17,7 +17,7 @@ def main(page: ft.Page):
         ft.SafeArea(
             ft.View(
             route="/",
-            controls=[HomeScreen(page).get_widget()
+            controls=[ScreenHome(page).buildHome()
                       ],
         )
         )

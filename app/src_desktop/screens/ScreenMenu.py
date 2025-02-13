@@ -1,17 +1,17 @@
 import flet as ft
-from components.com_appContainer import AppContainer  # Layout base da aplicação
+from components.BasePage import BasePage  # Layout base da aplicação
 from config.constant import SCREEN_WIDTH, SCREEN_HEIGHT  # Constantes de largura e altura
 from components.view_container import DynamicContainer  # Container dinâmico
 from components.botoes import Button  # Classe personalizada para botões
-from screens.layouts_menu.lista_menu import ListarMenu
-from screens.layouts_menu.criar_categoria import Categoria
+from screens.layouts_menu.LayoutListAllMenu import LayoutListAllMenu
+from screens.layouts_menu.LayoutCategory import LayoutCategory
 from screens.layouts_menu.deletar_categoria import TelaDeletarCategoria
 from screens.layouts_menu.deletar_menu import TelaDeletarMenu
-from screens.layouts_menu.criar_menu import CriarMenu
+from screens.layouts_menu.LayoutCreateMenu import LayoutCreateMenu
 from components.titles_of_pages import TitlesView
 
 
-class Menu:
+class ScreenMenu(BasePage):
     def __init__(self, page: ft.Page):
         """
         Inicializa a classe Menu com os elementos visuais e configurações.
@@ -19,7 +19,7 @@ class Menu:
         Args:
             page (ft.Page): Instância da página principal.
         """
-        self.base = AppContainer(page)
+        super().__init__(page)
         self.container_dynamic = DynamicContainer(page=page)  # Instância do container dinâmico
         self.cor_fundo_field_btn = "#2C799F"  # Cor de fundo para o campo de botões
         self.cor_btns = "#1019C2"
@@ -48,11 +48,11 @@ class Menu:
         self.remover_categoria.set_onclick(self.mostrar_remover_categoria)
         
         # instanciação das telas de layout
-        self.tela_listagem_menu = ListarMenu(page=page)
-        self.tela_listagem_categoria = Categoria(page=page)
+        self.tela_listagem_menu = LayoutListAllMenu(page=page)
+        self.tela_listagem_categoria = LayoutCategory(page=page)
         self.tela_deletar_menu=TelaDeletarMenu()
         self.tela_deletar_categoria=TelaDeletarCategoria()
-        self.tela_criar_menu=CriarMenu(page)
+        self.tela_criar_menu=LayoutCreateMenu(page)
         
         
         
@@ -89,7 +89,7 @@ class Menu:
     def mostrar_editar_menu(self, e):
         self.container_dynamic.update_content(self.tela_editar.build())
 
-    def build(self):
+    def content(self):
         """
         Constrói o layout completo do menu.
 
@@ -138,10 +138,10 @@ class Menu:
         )
 
         # Combinação do cabeçalho e da linha principal em um layout vertical
-        content = ft.Column(
+        return ft.Column(
             controls=[header_row, content_row],  # Adiciona as linhas
             spacing=5,  # Espaço entre as linhas
         )
 
-        # Retorna o layout completo, centralizado no container base
-        return self.base.build(content)
+    def buildMenu(self) -> callable:
+        return self.build()

@@ -1,5 +1,5 @@
 import flet as ft
-from services.api import Api
+from services.APIClient import APIClient
 
 
 class Barra:
@@ -18,7 +18,7 @@ class Barra:
         """
         self.lista = lista  # Lista de itens a ser exibida
         self.page = page  # Página principal
-        self.api = Api(page)  # Objeto para comunicação com a API
+        self.api = APIClient()  # Objeto para comunicação com a API
         self.on_remove = on_remove  # Função de callback para remoção de itens
 
     def remover_item(self, item_id):

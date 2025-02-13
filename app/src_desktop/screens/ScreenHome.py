@@ -1,10 +1,10 @@
 import flet as ft  # Importa o módulo Flet
-from components.com_appContainer import AppContainer  # Classe para o layout base da aplicação
-from components.cards import Card  # Classe para criação de cartões estilizados
+from components.BasePage import BasePage  # Classe para o layout base da aplicação
+from components.Card import Card  # Classe para criação de cartões estilizados
 from config.constant import SCREEN_HEIGHT, SCREEN_WIDTH  # Constantes de largura e altura da tela
-from components.botoes import Button  # Classe personalizada para botões
+from components.botoes import Button, ButtonControlOrder, ButtonOrdersQueue, ButtonHistory
 
-class HomeScreen:
+class ScreenHome(BasePage):
     """
     Classe responsável por construir e organizar a tela inicial do aplicativo.
 
@@ -23,14 +23,14 @@ class HomeScreen:
     """
 
     def __init__(self, page: ft.Page):
+        super().__init__(page)
         """
         Inicializa a classe HomeScreen.
 
         Args:
             page (ft.Page): Instância da página principal onde o layout será exibido.
         """
-        self.page = page
-        self.base = AppContainer(page)  # Container base para o layout
+        
 
         # Criação e configuração dos cartões
         self.card1 = Card("#44998B", "img\\img_card1.jpeg")
@@ -39,24 +39,24 @@ class HomeScreen:
         self.card3.set_spacing_btn(10)  # Define o espaçamento entre os botões do terceiro cartão
 
         # Criação dos botões para cada funcionalidade
-        self.btn_ctrl_pedidos = Button(route="/pedidos", page=self.page)
-        self.btn_fila_pedidos = Button(route="/menu", page=self.page)
-        self.btn_historico_pedidos = Button(route="/menu", page=self.page)
+        self.btn_ctrl_pedidos = ButtonControlOrder(page).build("Controle de Pedidos")
+        self.btn_fila_pedidos = ButtonOrdersQueue(page).build("Fila de Pedidos")
+        self.btn_historico_pedidos = ButtonHistory( page=self.page).build("Historico de Pedidos")
 
-        self.btn_cadastrar_cliente = Button(route="/menu", page=self.page, color="#1019C2")
-        self.buscar_cliente = Button(route="/menu", page=self.page, color="#1019C2")
-        self.todos_clientes = Button(route="/menu", page=self.page, color="#1019C2")
+        self.btn_cadastrar_cliente = Button(route="/menu", page=self.page)
+        self.buscar_cliente = Button(route="/menu", page=self.page)
+        self.todos_clientes = Button(route="/menu", page=self.page)
 
-        self.menu = Button(route="/menu", page=self.page, color="#B61254")
-        self.funcionarios = Button(route="/menu", page=self.page, color="#B61254")
-        self.pedidos_cancelados = Button(route="/menu", page=self.page, color="#B61254")
-        self.outros = Button(route="/menu", page=self.page, color="#B61254")
+        self.menu = Button(route="/menu", page=self.page)
+        self.funcionarios = Button(route="/menu", page=self.page)
+        self.pedidos_cancelados = Button(route="/menu", page=self.page)
+        self.outros = Button(route="/menu", page=self.page)
 
         # Listas de botões associados a cada cartão
         self.buttons_card1 = [
-            self.btn_ctrl_pedidos.build("Controle de Pedidos"),
-            self.btn_fila_pedidos.build("Fila de Pedidos"),
-            self.btn_historico_pedidos.build("Histórico de Pedidos")
+            self.btn_ctrl_pedidos,
+            self.btn_fila_pedidos,
+            self.btn_historico_pedidos
         ]
 
         self.buttons_card2 = [
@@ -72,7 +72,7 @@ class HomeScreen:
             self.outros.build("Outros")
         ]
 
-    def get_widget(self):
+    def content(self):
         """
         Constrói o layout principal da tela inicial.
 
@@ -81,7 +81,7 @@ class HomeScreen:
         Returns:
             ft.Container: O container principal com todos os elementos organizados.
         """
-        content = ft.Container(
+        return ft.Container(
             width=SCREEN_WIDTH * 0.85,
             height=SCREEN_HEIGHT * 0.85,
             content=ft.Row(
@@ -105,6 +105,6 @@ class HomeScreen:
                 alignment=ft.MainAxisAlignment.CENTER,  # Centraliza os elementos horizontalmente
             ),
         )
-
-        # Retorna o conteúdo centralizado usando o container base
-        return self.base.center_content(self.base.build(content))
+    def buildHome(self):
+        return self.build()
+        

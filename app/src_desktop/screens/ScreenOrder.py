@@ -1,30 +1,30 @@
 import flet as ft
-from components.com_appContainer import AppContainer
+from components.BasePage import BasePage
 from components.titles_of_pages import TitlesView
-from components.list import TabelaDinamica as TD
-from services.api import Api
+from components.TableView import TableView
+from services.APIClient import APIClient
 from utils.gets import obter_nome_por_id, formatar_data_para_brasil
 
 # Cabeçalhos da tabela
 cabecalhos = ["Nome", "Comanda", "N° do Pedido", "Valor Total", "Data"]
 
-class Pedido:
-    def __init__(self, page: ft.Page):
+class ScreenOrder(BasePage):
+    def __init__(self, page: ft.Page)-> None:
+        super().__init__(page)
         self.page = page
 
         # Obtém os dados da API
-        self._pedido = Api(page).get_api("http://127.0.0.1:8000/api/pedidos/")
+        self._pedido = APIClient().get_api("http://127.0.0.1:8000/api/pedidos/")
 
         # Componentes principais
-        self.base = AppContainer(page)
         self.title = TitlesView(page)
-        self.list = TD(cabecalhos=cabecalhos, page=page)
+        self.list = TableView(cabecalhos=cabecalhos, page=page)
 
         # Processa os dados da API para exibição na tabela
-        dados_formatados = self.formatar_dados(self._pedido)
+        dados_formatados = self.__format_data(self._pedido)
         self.list.set_dados(dados_formatados)
 
-    def formatar_dados(self, pedidos):
+    def __format_data(self, pedidos) -> list:
         """
         Formata os dados recebidos da API para serem exibidos na tabela.
         Substitui o ID do cliente pelo nome do cliente usando a função obter_nome_por_id
@@ -71,11 +71,11 @@ class Pedido:
             
         return dados_formatados
 
-    def build(self):
+    def content(self) -> ft.Container:
         """
         Constrói o layout da página.
         """
-        content = ft.Container(
+        return ft.Container(
             content=ft.Column(
                 controls=[
                     ft.Row(
@@ -89,4 +89,7 @@ class Pedido:
                 scroll=True,
             )
         )
-        return self.base.build(content)
+        
+    def buildMenu(self) -> callable:
+        """Builds the menu"""
+        return self.build()

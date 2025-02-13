@@ -80,7 +80,7 @@ class OrderService:
             int: ID of the created order, or None if the operation fails.
         """
         data = {
-            "cli_id": client_id,
+            #"cli_id": client_id,
             "com_id": command_id,
             "ped_abertura": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "ped_fechamento": None,

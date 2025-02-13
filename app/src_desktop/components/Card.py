@@ -10,7 +10,7 @@ class Card:
         self._spacing_btn=20
         
 
-    def build(self, list_btns: list) -> ft.Container:
+    def build(self, list_btns: list= None) -> ft.Container:
         # Número de botões por linha
         buttons_per_row = 1
 

@@ -1,10 +1,10 @@
 import flet as ft
-from components.com_appContainer import AppContainer
+from components.BasePage import BasePage
 from components.botoes import Button
 from utils.cadastro import cadastrar_categoria
 
 
-class Categoria:
+class LayoutCategory(BasePage):
     
     def __init__(self,  page: ft.Page):
         """
@@ -13,8 +13,8 @@ class Categoria:
         Args:
             page (ft.Page): Página principal da aplicação.
         """
+        super().__init__(page)
         self.page = page
-        self.base = AppContainer(self.page)
         self.btn=Button(page=page, color="#1019C2")
         self.btn.set_onclick(onclick=self.salvar_categoria)
         self.categoria_ref = ft.Ref[ft.TextField]()  # Criando a referência para o TextField
@@ -25,8 +25,8 @@ class Categoria:
         categoria = self.categoria_ref.current.value
         return cadastrar_categoria(categoria, self.page)
     
-    def build(self):
-        content = ft.Container(
+    def content(self):
+        return ft.Container(
             content=ft.Column(
                     controls=[
                         ft.Row(
@@ -46,4 +46,3 @@ class Categoria:
             bgcolor="#22094D",
             
         )
-        return self.base.build(content=content)
