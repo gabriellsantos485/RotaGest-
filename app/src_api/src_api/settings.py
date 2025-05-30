@@ -26,6 +26,7 @@ SECRET_KEY = 'django-insecure--(f+gjclccfe@3iqg6-n+pxm3h)z3_jz!__*t=mcs!nb6p9-c7
 DEBUG = True
 
 ALLOWED_HOSTS = []
+AUTH_USER_MODEL = "restaurante.Usuario"
 
 
 # Application definition
@@ -39,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'restaurante',
+    'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
@@ -127,3 +129,27 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',  # Ou outro banco de dados
+        'NAME': 'bdrota',
+        'USER': 'root',
+        'PASSWORD': '3002Grs$',
+        'HOST': 'localhost',
+        'PORT': '3306',
+        'OPTIONS': {
+            'init_command': "SET foreign_key_checks = 0;",  # Evita erros de chave estrangeira
+        },
+    }
+}
+
+# Desativar migrações automáticas para os apps do Django
+MIGRATION_MODULES = {
+    'auth': None,
+    'admin': None,
+    'contenttypes': None,
+    'sessions': None,
+    'messages': None,
+    'staticfiles': None,
+}

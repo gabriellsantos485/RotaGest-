@@ -1,5 +1,3 @@
-
-
 class Api:
     
     def list(self):

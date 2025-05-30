@@ -49,20 +49,23 @@ class TableView:
         Obtém o ID do pedido a partir dos dados da linha.
         """
         return linha_dados.get("N° do Pedido", None)
+    
+    def __obter_valor_total(self, linha_dados) -> str:
+        return linha_dados.get("Valor Total", None)
 
     def _criar_botoes_acao(self, linha_dados) ->Row:
         """
         Cria os botões de ação para a linha da tabela.
         """
         pedido_id = self._obter_pedido_id(linha_dados)
-
+        total = self.__obter_valor_total(linha_dados)
         return Row(
             controls=[
                 IconButton(
                     icon=icons.PAYMENTS,
                     tooltip="Efetuar Pagamento",
                     icon_color="green",
-                    on_click=lambda _: self.efetuar_pagamento(pedido_id),
+                    on_click=lambda _: self.efetuar_pagamento(pedido_id, total),
                 ),
                 IconButton(
                     icon=icons.CANCEL,
@@ -130,12 +133,12 @@ class TableView:
         Exibe o diálogo solicitando a senha do administrador para cancelar o pedido.
         """
         
-    def efetuar_pagamento(self, pedido_id)->None:
+    def efetuar_pagamento(self, pedido_id, total)->None:
         api=APIClient()
         data_orders_items=api.get_api(f"http://127.0.0.1:8000/api/itens-menu/filtrar_por_ped_id/?ped_id={pedido_id}")
         
         #dialog responsable of screen of payment
-        opd = OrderPaymentDialog(self.page, pedido_id, data_orders_items, 100)
+        opd = OrderPaymentDialog(self.page, pedido_id, data_orders_items, total)
         """
         Realiza a ação de pagamento do pedido.
         """

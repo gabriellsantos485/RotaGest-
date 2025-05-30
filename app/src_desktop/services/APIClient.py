@@ -89,3 +89,31 @@ class APIClient:
                 logger.error(f"Erro ao atualizar o item: {error_message}")
         except requests.exceptions.RequestException as e:
             logger.exception(f"Erro ao conectar à API: {e}")
+            
+    def update_pedido_status(self, pedido_id: int, novo_status: str) -> bool:
+        """
+        Atualiza o status de um pedido específico.
+
+        Args:
+            pedido_id (int): ID do pedido a ser atualizado.
+            novo_status (str): Novo status do pedido.
+
+        Returns:
+            bool: True se a atualização for bem-sucedida, False caso contrário.
+        """
+        url = f"http://127.0.0.1:8000/api/pedidos/{pedido_id}/"
+        data = {"ped_status": novo_status}
+
+        try:
+            response = requests.patch(url, json=data)
+            
+            if response.status_code == 200:
+                logger.info(f"Pedido {pedido_id} atualizado para status '{novo_status}'.")
+                return True
+            else:
+                logger.error(f"Erro ao atualizar pedido {pedido_id}: {response.json()}")
+                return False
+        except requests.exceptions.RequestException as e:
+            logger.exception(f"Erro ao conectar à API: {e}")
+            return False
+
